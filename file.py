@@ -1,28 +1,32 @@
+import json
+import os
+from collections import defaultdict
+
 from worker import Worker
 
 
 class File:
-    def __init__(self, *args):
-        self.files: list = [*args]
+    def __init__(self, arg):
+        self.files: list = arg
         self.read_files: list = []
 
     def read(self):
         self.read_files: list = []
-        read_file: list = []
         for file in self.files:
-            with open(file, "r") as f:
-                lines = f.readlines()
-                read_file = []
-                for line in lines:
-                    read_file.append(line.split("\n"))
-                self.read_files.append(read_file)
+            try:
+                with open(file, "r") as f:
+                    lines = f.readlines()
+                    read_file = []
+                    for line in lines:
+                        read_file.append(line.split("\n"))
+                    self.read_files.append(read_file)
+            except:
+                raise ValueError(f"file {file} not found")
         return self.read_files
 
     def convert_list_to_dict(self):
         read_file = self.read()
         file_list_dict: list = []
-        if len(read_file) == 0:
-            return "error"
         for file in self.read_files:
             header = file[0][0].split(",")
             file.pop(0)
@@ -48,9 +52,47 @@ class File:
             list_obj.append(worker)
         return list_obj
 
-    def create_report_payout(self):
+    def create_report_payout(self, filename):
         list_obj = self.create_list_worker()
-        list_dep = []
+        dict_dep = defaultdict(lambda: {
+            "workers": [],
+            "total_hours": 0,
+            "total_payout": 0
+        })
         for obj in list_obj:
-            if obj.department not in list_dep:
-                list_dep.append(obj.department)
+            dict_dep[obj.department]["workers"].append(
+                {
+                    "id": obj.id,
+                    "email": obj.email,
+                    "name": obj.name,
+                    "department": obj.department,
+                    "hours": obj.hours,
+                    "rate": obj.rate
+                }
+            )
+            dict_dep[obj.department]["total_hours"] += obj.hours
+            dict_dep[obj.department]["total_payout"] += obj.payout
+        self.save_report(dict_dep, filename)
+        self.print_report(dict_dep)
+        return dict_dep
+
+    def save_report(self, data, filename):
+        try:
+            with open(filename, "w") as f:
+                json.dump(data, f)
+        except:
+            os.makedirs(os.path.dirname(filename))
+
+    def print_report(self, report):
+        print(15 * " ", "name", 11 * " ", "hours", 2 * " ", "rate", 1 * " ", "payout", 9 * " ")
+        for dep, data in sorted(report.items()):
+            print(dep)
+            for worker in data["workers"]:
+                payout = worker["hours"] * worker["rate"]
+                print(15 * " ", worker["name"], (15 - len(worker["name"])) * " ", worker["hours"],
+                      (7 - len(str(worker["hours"]))) * " ", worker["rate"], (5 - len(str(worker["rate"]))) * " ", "$",
+                      payout,
+                      ((15 - len(str(payout))) * " "))
+            print(32 * " ", data["total_hours"], (7 - len(str(data["total_hours"]))) * " ", 6 * " ", "$",
+                  data["total_payout"])
+
