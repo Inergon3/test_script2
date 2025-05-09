@@ -11,14 +11,13 @@ class File:
         self.read_files: list = []
 
     def read(self):
-        self.read_files: list = []
         for file in self.files:
             try:
                 with open(file, "r") as f:
-                    lines = f.readlines()
-                    read_file = []
+                    lines: list[str] = f.readlines()
+                    read_file: list[str] = []
                     for line in lines:
-                        read_file.append(line.split("\n"))
+                        read_file.append(line.replace("\n", "").split(","))
                     self.read_files.append(read_file)
             except:
                 raise ValueError(f"file {file} not found")
@@ -27,18 +26,16 @@ class File:
     def convert_list_to_dict(self):
         read_file = self.read()
         file_list_dict: list = []
-        for file in self.read_files:
-            header = file[0][0].split(",")
+        for file in read_file:
+            header = file[0]
             file.pop(0)
             for val in file:
                 count: int = 0
-                val1 = val[count]
-                val1 = val1.strip().split(",")
                 cache: dict = {}
-                while count <= len(val1) - 1:
+                while count <= len(val) - 1:
                     if header[count] == "salary" or header[count] == "hourly_rate":
                         header[count] = "rate"
-                    cache[header[count]] = val1[count]
+                    cache[header[count]] = val[count]
                     count += 1
                 file_list_dict.append(cache)
         return file_list_dict
