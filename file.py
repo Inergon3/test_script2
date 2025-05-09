@@ -35,7 +35,7 @@ class File:
                 while count <= len(val) - 1:
                     if header[count] == "salary" or header[count] == "hourly_rate":
                         header[count] = "rate"
-                    cache[header[count]] = val[count]
+                    cache[header[count].lstrip().rstrip()] = val[count].lstrip().rstrip()
                     count += 1
                 file_list_dict.append(cache)
         return file_list_dict
