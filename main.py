@@ -14,8 +14,5 @@ def main():
     file = File(args.files)
     file.create_report_payout(args.report)
 
-# file = File(["data1.csv", "data2.csv", "data3.csv"])
-# file.create_report_payout("qwe.json")
-# test_file = File(["test.csv"])
 if __name__ == "__main__":
     main()
